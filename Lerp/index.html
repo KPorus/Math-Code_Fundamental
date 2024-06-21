@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linear Interpolation</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="mycanvas"></canvas>
+
+    <script>
+      mycanvas = document.getElementById("mycanvas");
+      mycanvas.width = window.innerWidth;
+      mycanvas.height = window.innerHeight;
+      ctx = mycanvas.getContext("2d");
+      let oscillator=null;
+      let audioCtx = null;
+      const A = { x: 100, y: 100 };
+      const B = { x: 400, y: 300 };
+      const orange = { r: 255, g: 165, b: 0 }; // Define the orange color
+      const blue = { r: 0, g: 0, b: 255 }; // Define the blue color
+
+      mycanvas.onClick = function () {
+        if (audioCtx == null) {
+          audioCtx = new (window.AudioContext ||
+            window.webkitAudioContext ||
+            webkitAudioContext)();
+          oscillator = audioCtx.createOscillator();
+          //oscillator.type = "sine";
+          oscillator.frequency.value = 2000;
+          oscillator.start();
+          const node = audioCtx.createGain();
+          node.gain.value = 0.1;
+          oscillator.connect(node);
+          node.connect(audioCtx.destination);
+        }
+      };
+
+      function canvas(A, label) {
+        ctx.beginPath();
+        ctx.fillStyle = "white";
+        ctx.strokeStyle = "black";
+        ctx.arc(A.x, A.y, 10.0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "black";
+        ctx.font = "14px bold Arial";
+        ctx.fillText(label, A.x, A.y);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+      }
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function vlerp(a, b, t) {
+        const res = {};
+        for (let attr in a) {
+          res[attr] = lerp(a[attr], b[attr], t);
+        }
+        return res;
+        // return {
+        //   x: lerp(a.x, b.x, t),
+        //   y: lerp(a.y, b.y, t),
+        // };
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, mycanvas.width, mycanvas.height);
+        const sec = new Date().getTime() / 1000;
+        const t = (Math.sin(sec * Math.PI) + 1) / 2;
+        const c = vlerp(A, B, t);
+        canvas(c, "");
+        canvas(A, "A");
+        canvas(B, "B");
+        const { r, g, b } = vlerp(orange, blue, t);
+        mycanvas.style.backgroundColor = `rgb(${r},${g},${b})`;
+        requestAnimationFrame(animate);
+      }
+      animate();
+    </script>
+  </body>
+</html>
